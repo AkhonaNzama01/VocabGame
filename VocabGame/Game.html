@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>General English Vocabulary Game</title>
+   
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f4f8; 
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+       
+        .container {
+            background-color: #ffffff;
+            border-radius: 1.5rem; 
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            max-width: 600px;
+            width: 100%;
+            padding: 2.5rem; 
+            text-align: center;
+            border: 1px solid #e2e8f0; 
+        }
+        .word-display {
+            font-size: 2.5rem; 
+            font-weight: 700;
+            color: #1a202c; 
+            margin-bottom: 1.5rem;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.05); /* Subtle text shadow */
+        }
+        .meaning-display {
+            font-size: 1.125rem; /* Slightly larger for meaning */
+            color: #4a5568; /* Medium gray text */
+            margin-top: 1.5rem;
+            min-height: 50px; /* Ensure space even when empty */
+            background-color: #edf2f7; /* Light background for meaning */
+            padding: 1rem;
+            border-radius: 0.75rem;
+            border: 1px dashed #cbd5e0; /* Dashed border for meaning box */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+        .button-group button {
+            transition: all 0.2s ease-in-out;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .button-group button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+        }
+        .button-group button:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .btn-primary {
+            background-image: linear-gradient(to right, #6366f1, #8b5cf6); /* Purple gradient */
+            color: white;
+            border: none;
+        }
+        .btn-secondary {
+            background-color: #4a5568; /* Dark gray */
+            color: white;
+            border: none;
+        }
+        .btn-primary:hover {
+            background-image: linear-gradient(to right, #4f46e5, #7c3aed);
+        }
+        .btn-secondary:hover {
+            background-color: #2d3748;
+        }
+        .message-box {
+            background-color: #fff;
+            border-radius: 0.75rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            padding: 1.5rem;
+            max-width: 400px;
+            margin: 20px auto;
+            text-align: center;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 1000;
+            border: 1px solid #e2e8f0;
+            display: none; /* Hidden by default */
+        }
+        .message-box h3 {
+            font-size: 1.5rem;
+            color: #1a202c;
+            margin-bottom: 1rem;
+        }
+        .message-box p {
+            color: #4a5568;
+            margin-bottom: 1.5rem;
+        }
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+            display: none; /* Hidden by default */
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="text-3xl font-bold text-gray-800 mb-6">Vocabulary Challenge</h1>
+        <p class="text-gray-600 mb-6">Guess the meaning of the word below!</p>
+
+        <div class="word-display" id="wordDisplay"></div>
+
+        <div class="meaning-display" id="meaningDisplay">
+            <!-- Meaning will be displayed here -->
+        </div>
+
+        <div class="button-group mt-8 flex flex-col sm:flex-row justify-center space-y-4 sm:space-y-0 sm:space-x-4">
+            <button id="checkMeaningBtn" class="btn-primary py-3 px-6 rounded-xl text-lg font-semibold">
+                Check Meaning
+            </button>
+            <button id="nextWordBtn" class="btn-secondary py-3 px-6 rounded-xl text-lg font-semibold">
+                Next Word
+            </button>
+        </div>
+    </div>
+
+    <!-- Message Box for alerts -->
+    <div id="messageBox" class="message-box">
+        <h3 id="messageTitle"></h3>
+        <p id="messageContent"></p>
+        <button id="messageBoxCloseBtn" class="btn-primary py-2 px-4 rounded-lg text-base font-medium">OK</button>
+    </div>
+    <div id="overlay" class="overlay"></div>
+
+    <script>
+        // Array of words and their simplest meanings - updated for general use
+        const words = [
+            { word: "Adapt", meaning: "To change to fit new conditions." },
+            { word: "Analyze", meaning: "To examine something carefully to understand it." },
+            { word: "Benefit", meaning: "An advantage or good thing." },
+            { word: "Communicate", meaning: "To share information or ideas." },
+            { word: "Consequence", meaning: "A result or effect of an action." },
+            { word: "Develop", meaning: "To grow or make something better." },
+            { word: "Efficient", meaning: "Doing something well without wasting time or resources." },
+            { word: "Emphasize", meaning: "To give special importance to something." },
+            { word: "Establish", meaning: "To set up or create something." },
+            { word: "Evidence", meaning: "Facts or information showing if something is true." },
+            { word: "Flexible", meaning: "Able to change or be changed easily." },
+            { word: "Identify", meaning: "To recognize or find something." },
+            { word: "Impact", meaning: "The strong effect of one thing on another." },
+            { word: "Implement", meaning: "To put a decision or plan into effect." },
+            { word: "Increase", meaning: "To become larger in amount or size." },
+            { word: "Individual", meaning: "A single person or thing." },
+            { word: "Influence", meaning: "The power to affect someone or something." },
+            { word: "Maintain", meaning: "To keep something in good condition or at a certain level." },
+            { word: "Objective", meaning: "A goal or aim." },
+            { word: "Participate", meaning: "To take part in something." },
+            { word: "Perspective", meaning: "A particular way of viewing things." },
+            { word: "Prioritize", meaning: "To treat something as more important than others." },
+            { word: "Relevant", meaning: "Connected with what is happening or being discussed." },
+            { word: "Resource", meaning: "A supply of something useful." },
+            { word: "Significant", meaning: "Important or noticeable." },
+            { word: "Solution", meaning: "A way to solve a problem." },
+            { word: "Strategy", meaning: "A plan of action to achieve a goal." },
+            { word: "Structure", meaning: "The way something is built or organized." },
+            { word: "Support", meaning: "To give help or encouragement." },
+            { word: "Utilize", meaning: "To make practical and effective use of something." },
+            { word: "Acquire", meaning: "To get or obtain something." },
+            { word: "Critique", meaning: "A detailed analysis and assessment of something." },
+            { word: "Diverse", meaning: "Showing a great deal of variety." },
+            { word: "Elaborate", meaning: "To add more detail or explanation to something." },
+            { word: "Facilitate", meaning: "To make an action or process easier." },
+            { word: "Incorporate", meaning: "To include something as part of a whole." },
+            { word: "Innovate", meaning: "To introduce new methods, ideas, or products." },
+            { word: "Mitigate", meaning: "To make something less severe or painful." },
+            { word: "Perceive", meaning: "To become aware of or understand something." },
+            { word: "Synthesize", meaning: "To combine different things into a new whole." }
+        ];
+
+        let currentWordIndex = 0;
+        let displayedMeaning = false; // Flag to track if meaning is shown
+
+        // Get DOM elements
+        const wordDisplay = document.getElementById('wordDisplay');
+        const meaningDisplay = document.getElementById('meaningDisplay');
+        const checkMeaningBtn = document.getElementById('checkMeaningBtn');
+        const nextWordBtn = document.getElementById('nextWordBtn');
+        const messageBox = document.getElementById('messageBox');
+        const messageTitle = document.getElementById('messageTitle');
+        const messageContent = document.getElementById('messageContent');
+        const messageBoxCloseBtn = document.getElementById('messageBoxCloseBtn');
+        const overlay = document.getElementById('overlay');
+
+        /**
+         * Displays a custom message box instead of alert().
+         * @param {string} title - The title of the message.
+         * @param {string} content - The content of the message.
+         */
+        function showMessageBox(title, content) {
+            messageTitle.textContent = title;
+            messageContent.textContent = content;
+            messageBox.style.display = 'block';
+            overlay.style.display = 'block';
+        }
+
+        /**
+         * Hides the custom message box.
+         */
+        function hideMessageBox() {
+            messageBox.style.display = 'none';
+            overlay.style.display = 'none';
+        }
+
+        /**
+         * Loads and displays a new word from the words array.
+         */
+        function loadNewWord() {
+            // Reset meaning display and flag
+            meaningDisplay.textContent = "Click 'Check Meaning' to reveal the answer.";
+            meaningDisplay.classList.remove('text-green-700', 'font-bold'); // Remove previous styling
+            displayedMeaning = false;
+
+            // Display the current word
+            wordDisplay.textContent = words[currentWordIndex].word;
+            checkMeaningBtn.disabled = false; // Enable check button
+        }
+
+        /**
+         * Event handler for the "Check Meaning" button.
+         * Displays the meaning of the current word.
+         */
+        checkMeaningBtn.addEventListener('click', () => {
+            if (!displayedMeaning) {
+                meaningDisplay.textContent = words[currentWordIndex].meaning;
+                meaningDisplay.classList.add('text-green-700', 'font-bold'); // Highlight meaning
+                displayedMeaning = true;
+                checkMeaningBtn.disabled = true; // Disable check button after showing meaning
+                showMessageBox("Meaning Revealed!", "You can now compare your understanding with the provided meaning.");
+            } else {
+                showMessageBox("Already Shown", "The meaning for this word is already displayed. Click 'Next Word' for a new challenge!");
+            }
+        });
+
+        /**
+         * Event handler for the "Next Word" button.
+         * Moves to the next word or restarts the game.
+         */
+        nextWordBtn.addEventListener('click', () => {
+            currentWordIndex++;
+            if (currentWordIndex < words.length) {
+                loadNewWord();
+            } else {
+                // All words have been displayed, restart the game
+                currentWordIndex = 0;
+                loadNewWord();
+                showMessageBox("Game Over!", "You've gone through all the words! Starting from the beginning.");
+            }
+        });
+
+        // Event listener for closing the message box
+        messageBoxCloseBtn.addEventListener('click', hideMessageBox);
+
+        // Initial load of the first word when the page loads
+        window.onload = loadNewWord;
+    </script>
+</body>
+</html>
